@@ -84,7 +84,7 @@ services:
       - traefik.http.services.browse-docker.loadbalancer.server.port=5800
 
   login:
-    image: authelia/authelia:4.29
+    image: authelia/authelia:4.30
     container_name: authelia
     restart: unless-stopped 
     security_opt:
