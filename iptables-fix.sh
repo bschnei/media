@@ -16,7 +16,7 @@ do
 	
 	result=$(iptables-save)
 
-	if [[ $result =~ "-A DOCKER -i docker0 -j RETURN" ]]; then
+	if [[ $result =~ "-A DEFAULT_FORWARD -i docker0 -o docker0 -j ACCEPT" ]]; then
 		echo "Docker rules found! Modifying..."
 		
 		iptables -t nat -A PREROUTING -m addrtype --dst-type LOCAL -j DOCKER
