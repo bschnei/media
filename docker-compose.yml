@@ -57,32 +57,6 @@ services:
       - traefik.http.routers.books.entrypoints=websecure
       - traefik.http.routers.books.middlewares=authelia-chain@file
 
-  browse:
-    image: jlesage/firefox:latest
-    container_name: firefox
-    restart: unless-stopped
-    security_opt:
-      - no-new-privileges:true
-      - seccomp:unconfined
-    environment:
-      USER_ID: $PUID
-      GROUP_ID: $PGID
-      TZ:
-      KEEP_APP_RUNNING: 1
-      DISPLAY_WIDTH: 1920
-      DISPLAY_HEIGHT: 1080
-    networks:
-      - frontend
-    volumes:
-      - firefox:/config
-      - $MEDIADIR/Downloads:/config/downloads
-      - /dev/shm:/dev/shm
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.browse.entrypoints=websecure
-      - traefik.http.routers.browse.middlewares=authelia-chain@file
-      - traefik.http.services.browse-docker.loadbalancer.server.port=5800
-
   login:
     image: authelia/authelia:4.30
     container_name: authelia
