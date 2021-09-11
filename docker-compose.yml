@@ -30,7 +30,6 @@ secrets:
     file: secrets/plex_claim
 
 volumes:
-  firefox:
   plex:
   pihole:
   dnsmasq:
