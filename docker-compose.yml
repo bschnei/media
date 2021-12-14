@@ -31,8 +31,6 @@ secrets:
 
 volumes:
   plex:
-  pihole:
-  dnsmasq:
 
 services:
 
@@ -120,37 +118,6 @@ services:
       - traefik.enable=true
       - traefik.http.routers.ombi.entrypoints=websecure
       - traefik.http.routers.ombi.middlewares=secure-headers@file
-
-  pihole:
-    image: cbcrowe/pihole-unbound:latest
-    container_name: pihole
-    restart: unless-stopped
-    hostname: pihole
-    domainname: pihole.home
-    environment:
-      ServerIP: 192.168.1.254
-      ServerIPv6: "fe80::211:32ff:fe8b:54f3"
-      TZ:
-      REV_SERVER: "true"
-      REV_SERVER_DOMAIN: home
-      REV_SERVER_TARGET: 192.168.1.1
-      REV_SERVER_CIDR: 192.168.1.0/24
-      DNSSEC: "true"
-      PIHOLE_DNS_: 127.0.0.1#5335
-      WEBPASSWORD: ""
-    networks:
-      - frontend
-    ports:
-      - "53:53/tcp"
-      - "53:53/udp"
-    volumes:
-      - pihole:/etc/pihole
-      - dnsmasq:/etc/dnsmasq.d
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.pihole.entrypoints=websecure
-      - traefik.http.routers.pihole.middlewares=authelia-chain@file
-      - traefik.http.services.pihole-docker.loadbalancer.server.port=80
 
   plex:
     image: plexinc/pms-docker:public
