@@ -4,8 +4,6 @@ I started with a simple goal: put authentication in front of some common media s
 
 I wound up using Authelia because it had support for both of those features along with good documentation and cool devs.
 
-The one disappointment I discovered was that external IP addresses did not get passed through Docker which means I could not use Authelia's IP-based access controls. I think the cleanest solution would be to move traefik into a separate docker network running in "host" mode, but that's not without its tradeoffs.
-
-This is running on a Synology NAS which requires some ugly hacks to get it to work.
+This is running on a Synology NAS which requires some ugly hacks to get it to work. The change-ports script makes the built-in nginx webserver listen on ports 81 and 444 to free them up for traefik. The iptables-fix script passes the true external IP address through to the docker containers. This is very useful for pihole and authelia.
 
 Major credit to htpcBeginner's fantastic website and examples.
