@@ -14,6 +14,8 @@ networks:
     internal: true
 
 secrets:
+  authelia_db_key:
+    file: secrets/authelia_db_key
   authelia_jwt_secret:
     file: secrets/authelia_jwt_secret
   ldap_password:
@@ -57,12 +59,13 @@ services:
       - traefik.http.routers.books.middlewares=authelia-chain@file
 
   login:
-    image: authelia/authelia:4.30
+    image: authelia/authelia:4.33
     container_name: authelia
     restart: unless-stopped 
     security_opt:
       - no-new-privileges:true
     environment:
+      AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE: /run/secrets/authelia_db_key
       AUTHELIA_JWT_SECRET_FILE: /run/secrets/authelia_jwt_secret
       AUTHELIA_SESSION_SECRET_FILE: /run/secrets/authelia_session_secret
       AUTHELIA_NOTIFIER_SMTP_PASSWORD_FILE: /run/secrets/authelia_smtp_password
@@ -73,6 +76,7 @@ services:
     volumes:
       - $DOCKERDIR/authelia:/config
     secrets:
+      - authelia_db_key
       - authelia_jwt_secret
       - ldap_password
       - authelia_session_secret
