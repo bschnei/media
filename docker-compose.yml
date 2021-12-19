@@ -51,6 +51,8 @@ services:
       - $MEDIADIR/Books:/books
     labels:
       - traefik.enable=true
+      - traefik.http.routers.books-redirect.entrypoints=web
+      - traefik.http.routers.books-redirect.middlewares=https-redirect@file
       - traefik.http.routers.books.entrypoints=websecure
       - traefik.http.routers.books.middlewares=authelia-chain@file
 
@@ -77,6 +79,8 @@ services:
       - authelia_smtp_password
     labels:
       - traefik.enable=true
+      - traefik.http.routers.login-redirect.entrypoints=web
+      - traefik.http.routers.login-redirect.middlewares=https-redirect@file
       - traefik.http.routers.login.entrypoints=websecure
       - traefik.http.routers.login.middlewares=authelia-chain@file
 
@@ -97,6 +101,8 @@ services:
       - $MEDIADIR/Downloads:/downloads
     labels:
       - traefik.enable=true
+      - traefik.http.routers.nzbget-redirect.entrypoints=web
+      - traefik.http.routers.nzbget-redirect.middlewares=https-redirect@file
       - traefik.http.routers.nzbget.entrypoints=websecure
       - traefik.http.routers.nzbget.middlewares=authelia-chain@file
 
@@ -116,6 +122,8 @@ services:
       - $DOCKERDIR/ombi:/config
     labels:
       - traefik.enable=true
+      - traefik.http.routers.ombi-redirect.entrypoints=web
+      - traefik.http.routers.ombi-redirect.middlewares=https-redirect@file
       - traefik.http.routers.ombi.entrypoints=websecure
       - traefik.http.routers.ombi.middlewares=secure-headers@file
 
@@ -145,6 +153,7 @@ services:
       - plex_claim
     labels:
       - traefik.enable=true
+      - traefik.http.routers.plex-http.entrypoints=web
       - traefik.http.routers.plex.entrypoints=websecure
       - traefik.http.routers.plex.middlewares=secure-headers@file
       - traefik.http.services.plex-docker.loadbalancer.server.port=32400
@@ -166,6 +175,8 @@ services:
       - $MEDIADIR:/media
     labels:
       - traefik.enable=true
+      - traefik.http.routers.radarr-redirect.entrypoints=web
+      - traefik.http.routers.radarr-redirect.middlewares=https-redirect@file
       - traefik.http.routers.radarr.entrypoints=websecure
       - traefik.http.routers.radarr.middlewares=authelia-chain@file
 
@@ -201,6 +212,8 @@ services:
       - $MEDIADIR/Downloads:/downloads
     labels:
       - traefik.enable=true
+      - traefik.http.routers.sonarr-redirect.entrypoints=web
+      - traefik.http.routers.sonarr-redirect.middlewares=https-redirect@file
       - traefik.http.routers.sonarr.entrypoints=websecure
       - traefik.http.routers.sonarr.middlewares=authelia-chain@file
 
@@ -213,7 +226,7 @@ services:
       - --global.sendanonymoususage=true
       - --api=true
       - --entrypoints.web.address=:80
-      - --entrypoints.web.http.redirections.entryPoint.to=websecure # redirect http to https
+#      - --entrypoints.web.http.redirections.entryPoint.to=websecure # redirect http to https
       - --entrypoints.websecure.address=:443
       - --entrypoints.websecure.http.tls.certResolver=leresolver
       - --entrypoints.websecure.http.tls.domains[0].main=$DOMAINNAME
@@ -247,6 +260,8 @@ services:
       - namecheap_user
     labels:
       - traefik.enable=true
+      - traefik.http.routers.traefik-redirect.entrypoints=web
+      - traefik.http.routers.traefik-redirect.middlewares=https-redirect@file
       - traefik.http.routers.traefik.entrypoints=websecure
       - traefik.http.routers.traefik.service=api@internal
       - traefik.http.routers.traefik.middlewares=authelia-chain@file
