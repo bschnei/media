@@ -59,7 +59,7 @@ services:
       - traefik.http.routers.books.middlewares=authelia-chain@file
 
   login:
-    image: authelia/authelia:4.33
+    image: authelia/authelia:4.34
     container_name: authelia
     restart: unless-stopped 
     security_opt:
