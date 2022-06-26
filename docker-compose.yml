@@ -110,27 +110,6 @@ services:
       - traefik.http.routers.nzbget.entrypoints=websecure
       - traefik.http.routers.nzbget.middlewares=authelia-chain@file
 
-  ombi:
-    image: linuxserver/ombi:latest
-    container_name: ombi
-    restart: unless-stopped
-    security_opt:
-      - no-new-privileges:true
-    environment:
-      PGID:
-      PUID:
-      TZ:
-    networks:
-      - frontend
-    volumes:
-      - $DOCKERDIR/ombi:/config
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.ombi-redirect.entrypoints=web
-      - traefik.http.routers.ombi-redirect.middlewares=https-redirect@file
-      - traefik.http.routers.ombi.entrypoints=websecure
-      - traefik.http.routers.ombi.middlewares=secure-headers@file
-
   plex:
     image: plexinc/pms-docker:public
     container_name: plex
