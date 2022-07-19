@@ -9,25 +9,7 @@ networks:
         - subnet: 172.16.0.0/24
         # gateway will be 172.16.0.1
 
-  # provides access to Docker API via socket-proxy service
-  socket_proxy:
-    internal: true
-
 secrets:
-  authelia_db_key:
-    file: secrets/authelia_db_key
-  authelia_jwt_secret:
-    file: secrets/authelia_jwt_secret
-  ldap_password:
-    file: secrets/ldap_password
-  authelia_session_secret:
-    file: secrets/authelia_session_secret
-  authelia_smtp_password:
-    file: secrets/authelia_smtp_password
-  namecheap_key:
-    file: secrets/namecheap_key
-  namecheap_user:
-    file: secrets/namecheap_user
   plex_claim:
     file: secrets/plex_claim
 
@@ -53,40 +35,7 @@ services:
       - $MEDIADIR/Books:/books
     labels:
       - traefik.enable=true
-      - traefik.http.routers.books-redirect.entrypoints=web
-      - traefik.http.routers.books-redirect.middlewares=https-redirect@file
-      - traefik.http.routers.books.entrypoints=websecure
-      - traefik.http.routers.books.middlewares=authelia-chain@file
-
-  login:
-    image: authelia/authelia:4.35
-    container_name: authelia
-    restart: unless-stopped 
-    security_opt:
-      - no-new-privileges:true
-    environment:
-      AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE: /run/secrets/authelia_db_key
-      AUTHELIA_JWT_SECRET_FILE: /run/secrets/authelia_jwt_secret
-      AUTHELIA_SESSION_SECRET_FILE: /run/secrets/authelia_session_secret
-      AUTHELIA_NOTIFIER_SMTP_PASSWORD_FILE: /run/secrets/authelia_smtp_password
-      AUTHELIA_AUTHENTICATION_BACKEND_LDAP_PASSWORD_FILE: /run/secrets/ldap_password
-      TZ:
-    networks:
-      - frontend
-    volumes:
-      - $DOCKERDIR/authelia:/config
-    secrets:
-      - authelia_db_key
-      - authelia_jwt_secret
-      - ldap_password
-      - authelia_session_secret
-      - authelia_smtp_password
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.login-redirect.entrypoints=web
-      - traefik.http.routers.login-redirect.middlewares=https-redirect@file
-      - traefik.http.routers.login.entrypoints=websecure
-      - traefik.http.routers.login.middlewares=authelia-chain@file
+      - traefik.http.routers.books.entrypoints=lan
 
   nzbget:
     image: linuxserver/nzbget:latest
@@ -105,10 +54,7 @@ services:
       - $MEDIADIR/Downloads:/downloads
     labels:
       - traefik.enable=true
-      - traefik.http.routers.nzbget-redirect.entrypoints=web
-      - traefik.http.routers.nzbget-redirect.middlewares=https-redirect@file
-      - traefik.http.routers.nzbget.entrypoints=websecure
-      - traefik.http.routers.nzbget.middlewares=authelia-chain@file
+      - traefik.http.routers.nzbget.entrypoints=lan
 
   plex:
     image: plexinc/pms-docker:public
@@ -136,9 +82,7 @@ services:
       - plex_claim
     labels:
       - traefik.enable=true
-      - traefik.http.routers.plex-http.entrypoints=web
-      - traefik.http.routers.plex.entrypoints=websecure
-      - traefik.http.routers.plex.middlewares=secure-headers@file
+      - traefik.http.routers.plex.entrypoints=lan
       - traefik.http.services.plex-docker.loadbalancer.server.port=32400
 
   radarr:
@@ -153,29 +97,14 @@ services:
       TZ:
     networks:
       - frontend
+    ports:
+      - "7878:7878"
     volumes:
       - $DOCKERDIR/radarr:/config
       - $MEDIADIR:/media
     labels:
       - traefik.enable=true
-      - traefik.http.routers.radarr-redirect.entrypoints=web
-      - traefik.http.routers.radarr-redirect.middlewares=https-redirect@file
-      - traefik.http.routers.radarr.entrypoints=websecure
-      - traefik.http.routers.radarr.middlewares=authelia-chain@file
-
-  # secures access to the Docker API
-  socket-proxy:
-    image: tecnativa/docker-socket-proxy
-    container_name: socket-proxy
-    restart: unless-stopped
-    security_opt:
-      - no-new-privileges:true
-    environment:
-      - CONTAINERS=1 # for traefik
-    networks:
-      - socket_proxy
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik.http.routers.radarr.entrypoints=lan
 
   sonarr:
     image: linuxserver/sonarr:latest
@@ -189,16 +118,15 @@ services:
       TZ:
     networks:
       - frontend
+    ports:
+      - "8989:8989"
     volumes:
       - $DOCKERDIR/sonarr:/config
       - "$MEDIADIR/TV Shows:/tv"
       - $MEDIADIR/Downloads:/downloads
     labels:
       - traefik.enable=true
-      - traefik.http.routers.sonarr-redirect.entrypoints=web
-      - traefik.http.routers.sonarr-redirect.middlewares=https-redirect@file
-      - traefik.http.routers.sonarr.entrypoints=websecure
-      - traefik.http.routers.sonarr.middlewares=authelia-chain@file
+      - traefik.http.routers.sonarr.entrypoints=lan
 
   traefik:
     image: traefik:v2.7
@@ -208,44 +136,24 @@ services:
       - --global.checknewversion=true
       - --global.sendanonymoususage=true
       - --api=true
-      - --entrypoints.web.address=:80
-#      - --entrypoints.web.http.redirections.entryPoint.to=websecure # redirect http to https
-      - --entrypoints.websecure.address=:443
-      - --entrypoints.websecure.http.tls.certResolver=leresolver
-      - --entrypoints.websecure.http.tls.domains[0].main=$DOMAINNAME
-      - --entrypoints.websecure.http.tls.domains[0].sans=*.$DOMAINNAME
-      - --certificatesresolvers.leresolver.acme.email=admin@$DOMAINNAME
-      - --certificatesresolvers.leresolver.acme.storage=acme.json
-      - --certificatesresolvers.leresolver.acme.dnschallenge.provider=namecheap
-      - --certificatesresolvers.leresolver.acme.dnschallenge.delaybeforecheck=90
+      - --entrypoints.lan.address=:80
       - --providers.docker=true
-      - --providers.docker.defaultRule=Host(`{{ index .Labels "com.docker.compose.service"}}.$DOMAINNAME`)
-      - --providers.docker.endpoint=tcp://socket-proxy:2375
-      - --providers.docker.exposedByDefault=false
+      - --providers.docker.defaultRule=Host(`{{ index .Labels "com.docker.compose.service"}}.toasty.lan`)
       - --providers.docker.network=docker_frontend
       - --providers.file.directory=/providers
     environment:
-      NAMECHEAP_API_KEY_FILE: /run/secrets/namecheap_key
-      NAMECHEAP_API_USER_FILE: /run/secrets/namecheap_user
       TZ:
     networks:
       frontend:
         ipv4_address: 172.16.0.254
-      socket_proxy:
     ports:
       - "80:80"
-      - "443:443"
     volumes:
       - $DOCKERDIR/traefik/acme/acme.json:/acme.json
       - $DOCKERDIR/traefik/providers:/providers
-    secrets:
-      - namecheap_key
-      - namecheap_user
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
     labels:
       - traefik.enable=true
-      - traefik.http.routers.traefik-redirect.entrypoints=web
-      - traefik.http.routers.traefik-redirect.middlewares=https-redirect@file
-      - traefik.http.routers.traefik.entrypoints=websecure
+      - traefik.http.routers.traefik.entrypoints=lan
       - traefik.http.routers.traefik.service=api@internal
-      - traefik.http.routers.traefik.middlewares=authelia-chain@file
 
