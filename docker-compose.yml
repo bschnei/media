@@ -6,8 +6,8 @@ networks:
   frontend:
     ipam:
       config:
-        - subnet: 172.16.0.0/24
-        # gateway will be 172.16.0.1
+        - subnet: 172.31.0.0/24
+        # gateway will be 172.31.0.1
 
 secrets:
   plex_claim:
@@ -17,25 +17,6 @@ volumes:
   plex:
 
 services:
-
-  books:
-    image: linuxserver/calibre-web:latest
-    container_name: calibre-web
-    restart: unless-stopped
-    security_opt:
-      - no-new-privileges:true
-    environment:
-      PGID:
-      PUID:
-      TZ:
-    networks:
-      - frontend
-    volumes:
-      - $DOCKERDIR/calibre:/config
-      - $MEDIADIR/Books:/books
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.books.entrypoints=lan
 
   nzbget:
     image: linuxserver/nzbget:latest
@@ -129,7 +110,7 @@ services:
       - traefik.http.routers.sonarr.entrypoints=lan
 
   traefik:
-    image: traefik:v2.7
+    image: traefik:v2.8
     container_name: traefik 
     restart: unless-stopped
     command:
@@ -145,11 +126,10 @@ services:
       TZ:
     networks:
       frontend:
-        ipv4_address: 172.16.0.254
+        ipv4_address: 172.31.0.254
     ports:
       - "80:80"
     volumes:
-      - $DOCKERDIR/traefik/acme/acme.json:/acme.json
       - $DOCKERDIR/traefik/providers:/providers
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
     labels:
