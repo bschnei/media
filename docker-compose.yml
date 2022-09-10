@@ -10,11 +10,16 @@ networks:
         # gateway will be 172.31.0.1
 
 secrets:
+  namecheap_key:
+    file: secrets/namecheap_key
+  namecheap_user:
+    file: secrets/namecheap_user
   plex_claim:
     file: secrets/plex_claim
 
 volumes:
   plex:
+  traefik-acme:
 
 services:
 
@@ -35,14 +40,14 @@ services:
       - $MEDIADIR/Downloads:/downloads
     labels:
       - traefik.enable=true
-      - traefik.http.routers.nzbget.entrypoints=lan
+      - traefik.http.routers.nzbget.entrypoints=websecure
 
   plex:
     image: plexinc/pms-docker:public
     container_name: plex
     restart: unless-stopped
     environment:
-      ADVERTISE_IP: "https://plex.$DOMAINNAME"
+      ADVERTISE_IP: "https://plex.$DOMAIN"
       HOSTNAME: PlexServer
       PLEX_CLAIM: "/run/secrets/plex_claim"
       PLEX_GID: $PGID
@@ -63,7 +68,7 @@ services:
       - plex_claim
     labels:
       - traefik.enable=true
-      - traefik.http.routers.plex.entrypoints=lan
+      - traefik.http.routers.plex.entrypoints=websecure
       - traefik.http.services.plex-docker.loadbalancer.server.port=32400
 
   radarr:
@@ -85,7 +90,7 @@ services:
       - $MEDIADIR:/media
     labels:
       - traefik.enable=true
-      - traefik.http.routers.radarr.entrypoints=lan
+      - traefik.http.routers.radarr.entrypoints=websecure
 
   sonarr:
     image: linuxserver/sonarr:latest
@@ -107,33 +112,49 @@ services:
       - $MEDIADIR/Downloads:/downloads
     labels:
       - traefik.enable=true
-      - traefik.http.routers.sonarr.entrypoints=lan
+      - traefik.http.routers.sonarr.entrypoints=websecure
 
   traefik:
     image: traefik:v2.8
     container_name: traefik 
     restart: unless-stopped
     command:
-      - --global.checknewversion=true
-      - --global.sendanonymoususage=true
+      - --global.checknewversion=false
+      - --global.sendanonymoususage=false
       - --api=true
-      - --entrypoints.lan.address=:80
+      - --entrypoints.web.address=:80
+      - --entrypoints.web.http.redirections.entryPoint.to=websecure
+      - --entrypoints.websecure.address=:443
+      - --entrypoints.websecure.http.tls.certResolver=leresolver
+      - --entrypoints.websecure.http.tls.domains[0].main=$DOMAIN
+      - --entrypoints.websecure.http.tls.domains[0].sans=*.$DOMAIN
+      - --certificatesresolvers.leresolver.acme.email=admin@$DOMAIN
+      - --certificatesresolvers.leresolver.acme.storage=/acme/acme.json
+      - --certificatesresolvers.leresolver.acme.dnschallenge.provider=namecheap
+      - --certificatesresolvers.leresolver.acme.dnschallenge.delaybeforecheck=90
       - --providers.docker=true
-      - --providers.docker.defaultRule=Host(`{{ index .Labels "com.docker.compose.service"}}.toasty.lan`)
+      - --providers.docker.defaultRule=Host(`{{ index .Labels "com.docker.compose.service"}}.$DOMAIN`)
       - --providers.docker.network=docker_frontend
-      - --providers.file.directory=/providers
+      - --providers.file.directory=/config
     environment:
+      NAMECHEAP_API_KEY_FILE: /run/secrets/namecheap_key
+      NAMECHEAP_API_USER_FILE: /run/secrets/namecheap_user
       TZ:
     networks:
       frontend:
         ipv4_address: 172.31.0.254
     ports:
       - "80:80"
+      - "443:443"
     volumes:
-      - $DOCKERDIR/traefik/providers:/providers
+      - traefik-acme:/acme
+      - $DOCKERDIR/traefik/config:/config
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    secrets:
+      - namecheap_key
+      - namecheap_user
     labels:
       - traefik.enable=true
-      - traefik.http.routers.traefik.entrypoints=lan
+      - traefik.http.routers.traefik.entrypoints=websecure
       - traefik.http.routers.traefik.service=api@internal
 
