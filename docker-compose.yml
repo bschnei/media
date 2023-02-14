@@ -48,6 +48,7 @@ services:
     restart: unless-stopped
     environment:
       ADVERTISE_IP: "https://plex.$DOMAIN"
+      ALLOWED_NETWORKS: "172.31.0.0/24"
       HOSTNAME: PlexServer
       PLEX_CLAIM: "/run/secrets/plex_claim"
       PLEX_GID: $PGID
