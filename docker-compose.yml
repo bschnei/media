@@ -84,8 +84,6 @@ services:
       TZ:
     networks:
       - frontend
-    ports:
-      - "7878:7878"
     volumes:
       - $DOCKERDIR/radarr:/config
       - $MEDIADIR:/media
@@ -105,8 +103,6 @@ services:
       TZ:
     networks:
       - frontend
-    ports:
-      - "8989:8989"
     volumes:
       - $DOCKERDIR/sonarr:/config
       - "$MEDIADIR/TV Shows:/tv"
@@ -116,7 +112,7 @@ services:
       - traefik.http.routers.sonarr.entrypoints=websecure
 
   traefik:
-    image: traefik:v2.9
+    image: traefik:v2.10
     container_name: traefik 
     restart: unless-stopped
     command:
