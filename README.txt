@@ -4,6 +4,6 @@ I started with a simple goal: put authentication in front of some common media s
 
 I wound up using Authelia because it had support for both of those features along with good documentation and cool devs.
 
-This is running on a Synology NAS which requires some ugly hacks to get it to work. The change-ports script makes the built-in nginx webserver listen on ports 81 and 444 to free up 80 and 443 for traefik. The iptables-fix script passes the true external IP address through to the docker containers. This is very useful for pihole and authelia.
+This is running on a Synology NAS which requires some ugly hacks to get it to work. The change-ports script makes the built-in nginx webserver listen on ports 81 and 444 to free up 80 and 443 for traefik.
 
 Major credit to htpcBeginner's fantastic website and examples.
