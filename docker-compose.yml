@@ -112,7 +112,7 @@ services:
       - traefik.http.routers.sonarr.entrypoints=websecure
 
   traefik:
-    image: traefik:v2.10
+    image: traefik:v2.11
     container_name: traefik 
     restart: unless-stopped
     command:
@@ -155,3 +155,24 @@ services:
       - traefik.http.routers.traefik.entrypoints=websecure
       - traefik.http.routers.traefik.service=api@internal
 
+  unifi:
+    user: unifi
+    image: ghcr.io/jacobalberty/unifi-docker
+    container_name: unifi
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+      - "8443:8443"
+      - "3478:3478/udp"
+    environment:
+      TZ:
+    networks:
+      frontend:
+    volumes:
+      - $DOCKERDIR/unifi:/unifi
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.unifi.entrypoints=websecure
+      - traefik.http.services.unifi-docker.loadbalancer.server.port=8443
+      - traefik.http.services.unifi-docker.loadbalancer.server.scheme=https
+      - traefik.http.services.unifi-docker.loadbalancer.serverstransport=unifi@file
