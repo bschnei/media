@@ -121,6 +121,8 @@ services:
       - --api=true
       - --entrypoints.web.address=:80
       - --entrypoints.web.http.redirections.entryPoint.to=websecure
+      - --entrypoints.portal.address=:8880
+      - --entrypoints.portal.http.redirections.entryPoint.to=websecure
       - --entrypoints.websecure.address=:443
       - --entrypoints.websecure.http.tls.certResolver=leresolver
       - --entrypoints.websecure.http.tls.domains[0].main=$DOMAIN
@@ -143,6 +145,7 @@ services:
     ports:
       - "80:80"
       - "443:443"
+      - "8880:8880"
     volumes:
       - traefik-acme:/acme
       - $DOCKERDIR/traefik/config:/config
@@ -173,6 +176,12 @@ services:
     labels:
       - traefik.enable=true
       - traefik.http.routers.unifi.entrypoints=websecure
+      - traefik.http.routers.unifi.service=unifi-docker
       - traefik.http.services.unifi-docker.loadbalancer.server.port=8443
       - traefik.http.services.unifi-docker.loadbalancer.server.scheme=https
       - traefik.http.services.unifi-docker.loadbalancer.serverstransport=unifi@file
+      - traefik.http.routers.portal.rule=Host(`portal.$DOMAIN`)
+      - traefik.http.routers.portal.entrypoints=websecure
+      - traefik.http.routers.portal.service=portal-docker
+      - traefik.http.services.portal-docker.loadbalancer.server.port=8880
+      - traefik.http.services.portal-docker.loadbalancer.server.scheme=http
