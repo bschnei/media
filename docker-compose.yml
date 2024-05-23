@@ -124,6 +124,7 @@ services:
       - --entrypoints.portal.address=:8880
       - --entrypoints.portal.http.redirections.entryPoint.to=websecure
       - --entrypoints.websecure.address=:443
+      - --entrypoints.websecure.http3
       - --entrypoints.websecure.http.tls.certResolver=leresolver
       - --entrypoints.websecure.http.tls.domains[0].main=$DOMAIN
       - --entrypoints.websecure.http.tls.domains[0].sans=*.$DOMAIN
@@ -144,7 +145,8 @@ services:
         ipv4_address: 172.31.0.254
     ports:
       - "80:80"
-      - "443:443"
+      - "443:443/tcp"
+      - "443:443/udp"
       - "8880:8880"
     volumes:
       - traefik-acme:/acme
