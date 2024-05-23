@@ -2,6 +2,9 @@ version: "3.7"
 
 networks:
 
+  # grafana stack backend network
+  logging:
+
   # network for services proxied by traefik
   frontend:
     ipam:
@@ -18,10 +21,48 @@ secrets:
     file: secrets/plex_claim
 
 volumes:
+  grafana:
   plex:
   traefik-acme:
 
 services:
+
+  alloy:
+    image: grafana/alloy
+    container_name: alloy
+    restart: unless-stopped
+    networks:
+      - logging
+    volumes:
+      - $DOCKERDIR/alloy:/etc/alloy
+      - $LOGDIR/alloy:/scrape
+    command:
+      - run
+      - --disable-reporting=true
+      - /etc/alloy/config.alloy
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    restart: unless-stopped
+    environment:
+      GF_SERVER_ROOT_URL: "https://grafana.$DOMAIN"
+    networks:
+      - frontend
+      - logging
+    volumes:
+      - grafana:/var/lib/grafana
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.grafana.entrypoints=websecure
+
+  loki:
+    image: grafana/loki
+    container_name: loki
+    restart: unless-stopped
+    command: -config.file=/etc/loki/local-config.yaml -target=all
+    networks:
+      - logging
 
   nzbget:
     image: linuxserver/nzbget:latest
